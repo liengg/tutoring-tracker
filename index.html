@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ตัวนับคาบเรียน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root{
+    --paper:#EEF2E8;
+    --paper-raised:#F7FAF3;
+    --ink:#22271F;
+    --ink-soft:#5C6355;
+    --line:#D6DECB;
+    --card-shadow: 0 1px 0 rgba(34,39,31,0.06);
+    --radius: 14px;
+  }
+  * { box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:100px;
+  }
+  header{
+    padding:28px 20px 18px;
+  }
+  header h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  #banner{
+    margin:0 20px 18px;
+    padding:12px 14px;
+    border-radius:10px;
+    background:#FBE9C9;
+    border:1px solid #E9CD8F;
+    font-size:13.5px;
+    display:none;
+    align-items:center;
+    gap:8px;
+    line-height:1.4;
+  }
+  #banner.show{ display:flex; }
+  main{
+    padding:0 20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 18px 16px;
+    box-shadow:var(--card-shadow);
+  }
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .subject-name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+  }
+  .subject-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .dots{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin:14px 0 16px;
+  }
+  .dot{
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    border:1.5px solid currentColor;
+  }
+  .dot.filled{ background:currentColor; }
+  .card-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    border-radius:9px;
+    border:none;
+    padding:9px 14px;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:var(--paper-raised);
+  }
+  .btn-primary:active{ opacity:0.85; }
+  .btn-ghost{
+    background:none;
+    color:var(--ink-soft);
+    padding:9px 6px;
+    text-decoration:underline;
+  }
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+  }
+  .empty .glyph{
+    font-family:'Fraunces',serif;
+    font-size:40px;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  .fab{
+    position:fixed;
+    bottom:22px;
+    left:20px;
+    right:20px;
+    background:var(--ink);
+    color:var(--paper-raised);
+    border:none;
+    border-radius:12px;
+    padding:15px;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .sheet-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(34,39,31,0.35);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:20;
+  }
+  .sheet-overlay.show{ display:flex; }
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-width:480px;
+    border-radius:18px 18px 0 0;
+    padding:22px 20px 26px;
+  }
+  .sheet h2{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    margin:0 0 16px;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin:14px 0 6px;
+  }
+  label:first-of-type{ margin-top:0; }
+  input[type=text], input[type=number], input[type=date]{
+    width:100%;
+    padding:11px 12px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:var(--paper-raised);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+  }
+  input:focus{ outline:2px solid var(--ink); outline-offset:1px; }
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .sheet-actions .btn{ flex:1; padding:12px; }
+  .btn-secondary{
+    background:none;
+    border:1.5px solid var(--line);
+    color:var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ตัวนับคาบเรียน</h1>
+  <p id="subhead">กำลังโหลด…</p>
+</header>
+
+<div id="banner"></div>
+
+<main id="subjectList"></main>
+
+<button class="fab" id="openAddSubject">+ เพิ่มวิชาใหม่</button>
+
+<!-- Add subject sheet -->
+<div class="sheet-overlay" id="addSubjectOverlay">
+  <div class="sheet">
+    <h2>เพิ่มวิชาใหม่</h2>
+    <label for="newSubjectName">ชื่อวิชา</label>
+    <input type="text" id="newSubjectName" placeholder="เช่น คณิตศาสตร์">
+    <label for="newSubjectTotal">จำนวนคาบทั้งหมดที่ซื้อ</label>
+    <input type="number" id="newSubjectTotal" min="1" placeholder="เช่น 20">
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="cancelAddSubject">ยกเลิก</button>
+      <button class="btn btn-primary" id="saveSubject">บันทึกวิชา</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log session sheet -->
+<div class="sheet-overlay" id="logSessionOverlay">
+  <div class="sheet">
+    <h2 id="logSessionTitle">ลงคาบเรียน</h2>
+    <label for="sessionDate">วันที่เรียน</label>
+    <input type="date" id="sessionDate">
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="cancelLogSession">ยกเลิก</button>
+      <button class="btn btn-primary" id="saveLogSession">บันทึกคาบเรียน</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — แก้ 2 บรรทัดนี้หลังจากตั้งค่า LINE Developers Console
+// และ deploy Apps Script Web App เรียบร้อยแล้ว
+// ============================================================
+const CONFIG = {
+  LIFF_ID: 'YOUR_LIFF_ID_HERE',        // จาก LINE Developers Console
+  API_URL: https://script.google.com/macros/s/AKfycbwioMADrMlrmJV9YgdyQuQrDAtVk4QzFZEl_q6BMxlNt9hGBUu8hUFQlWBFX965GXhN9w/exec  // URL ของ Apps Script ที่ deploy เป็น Web App
+};
+
+const COLORS = ['#C1666B', '#5C7A99', '#6B8F71', '#B4894A', '#7A5C82', '#4E7C7C'];
+
+let subjects = [];   // { id, name, total, count }
+let demoMode = false;
+let activeSubjectId = null;
+
+const el = (id) => document.getElementById(id);
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function showBanner(msg){
+  const b = el('banner');
+  b.textContent = msg;
+  b.classList.add('show');
+}
+
+// ---------- API layer ----------
+// Apps Script Web App รับ action ผ่าน query string (GET) หรือ body (POST)
+// action: 'list' | 'addSubject' | 'logSession'
+async function apiCall(action, payload){
+  if (demoMode) return demoApiCall(action, payload);
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'}, // Apps Script Web App รับแบบนี้ได้ง่ายกว่า
+      body: JSON.stringify({ action, ...payload })
+    });
+    if (!res.ok) throw new Error('bad response');
+    return await res.json();
+  } catch (err){
+    console.warn('API ยังไม่พร้อมใช้งาน กำลังสลับเป็นโหมดตัวอย่าง (ข้อมูลจะไม่ถูกบันทึกจริง):', err);
+    demoMode = true;
+    showBanner('ยังไม่ได้เชื่อมต่อ Google Sheet — นี่คือโหมดตัวอย่าง ข้อมูลจะหายเมื่อปิดหน้านี้');
+    return demoApiCall(action, payload);
+  }
+}
+
+// ---------- Demo fallback (in-memory only, for preview before backend is wired up) ----------
+let demoSubjects = [
+  { id: 'demo-1', name: 'คณิตศาสตร์', total: 20, count: 5 },
+  { id: 'demo-2', name: 'ภาษาอังกฤษ', total: 10, count: 8 },
+];
+function demoApiCall(action, payload){
+  if (action === 'list') return { subjects: demoSubjects };
+  if (action === 'addSubject'){
+    const s = { id: 'demo-' + Date.now(), name: payload.name, total: payload.total, count: 0 };
+    demoSubjects.push(s);
+    return { subjects: demoSubjects };
+  }
+  if (action === 'logSession'){
+    const s = demoSubjects.find(x => x.id === payload.subjectId);
+    if (s && s.count >= s.total) return { error: 'วิชานี้เรียนครบจำนวนคาบแล้ว', subjects: demoSubjects };
+    if (s) s.count += 1;
+    return { subjects: demoSubjects };
+  }
+  if (action === 'deleteSubject'){
+    demoSubjects = demoSubjects.filter(x => x.id !== payload.subjectId);
+    return { subjects: demoSubjects };
+  }
+  return { subjects: demoSubjects };
+}
+
+// ---------- Rendering ----------
+function renderSubjects(){
+  const list = el('subjectList');
+  if (subjects.length === 0){
+    list.innerHTML = `
+      <div class="empty">
+        <div class="glyph">﹢</div>
+        <div>ยังไม่มีวิชา กดปุ่มด้านล่างเพื่อเริ่มเพิ่มวิชาแรก</div>
+      </div>`;
+    return;
+  }
+  list.innerHTML = subjects.map((s, i) => {
+    const color = COLORS[i % COLORS.length];
+    const remaining = Math.max(s.total - s.count, 0);
+    const dots = Array.from({length: s.total}, (_, j) =>
+      `<span class="dot ${j < s.count ? 'filled' : ''}"></span>`
+    ).join('');
+    return `
+      <div class="card" style="color:${color}">
+        <div class="card-top">
+          <div class="subject-name" style="color:var(--ink)">${escapeHtml(s.name)}</div>
+          <div class="subject-count">${s.count}/${s.total} · เหลือ ${remaining}</div>
+        </div>
+        <div class="dots">${dots}</div>
+        <div class="card-actions" style="color:var(--ink)">
+          ${remaining > 0
+            ? `<button class="btn btn-primary" style="background:${color}" onclick="openLogSession('${s.id}', '${escapeHtml(s.name)}')">ลงคาบเรียน</button>`
+            : `<span class="subject-count" style="color:${color}">เรียนครบแล้ว</span>`
+          }
+          <button class="btn btn-ghost" onclick="deleteSubject('${s.id}', '${escapeHtml(s.name)}')">ลบวิชา</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Actions ----------
+async function loadSubjects(){
+  const data = await apiCall('list', {});
+  subjects = data.subjects || [];
+  renderSubjects();
+  checkWeeklyStatus();
+}
+
+function checkWeeklyStatus(){
+  // เตือนในหน้าเว็บด้วยถ้าสัปดาห์นี้ยังไม่มีการลงคาบเลย (ระบบเตือนหลักจะมาจาก LINE push message รายสัปดาห์)
+  // หน้านี้ต้องรอ API ส่ง lastLoggedDate มาด้วยจึงจะเช็คได้แม่นยำ — ใส่ไว้เป็นจุดขยายในอนาคต
+  el('subhead').textContent = subjects.length
+    ? `ติดตาม ${subjects.length} วิชา`
+    : 'เริ่มเพิ่มวิชาแรกของคุณ';
+}
+
+function openAddSubject(){
+  el('newSubjectName').value = '';
+  el('newSubjectTotal').value = '';
+  el('addSubjectOverlay').classList.add('show');
+}
+function closeAddSubject(){ el('addSubjectOverlay').classList.remove('show'); }
+
+async function saveSubject(){
+  const name = el('newSubjectName').value.trim();
+  const total = parseInt(el('newSubjectTotal').value, 10);
+  if (!name || !total || total < 1){
+    alert('กรุณากรอกชื่อวิชาและจำนวนคาบให้ถูกต้อง');
+    return;
+  }
+  const data = await apiCall('addSubject', { name, total });
+  subjects = data.subjects || subjects;
+  renderSubjects();
+  closeAddSubject();
+}
+
+function openLogSession(subjectId, subjectName){
+  const s = subjects.find(x => x.id === subjectId);
+  if (s && s.count >= s.total){
+    alert(`${subjectName} เรียนครบ ${s.total} คาบแล้ว ไม่สามารถลงคาบเพิ่มได้`);
+    return;
+  }
+  activeSubjectId = subjectId;
+  el('logSessionTitle').textContent = `ลงคาบเรียน — ${subjectName}`;
+  el('sessionDate').value = todayStr();
+  el('sessionDate').max = todayStr(); // กันไม่ให้เลือกวันในอนาคต ลงย้อนหลังได้ไม่จำกัด
+  el('logSessionOverlay').classList.add('show');
+}
+function closeLogSession(){ el('logSessionOverlay').classList.remove('show'); }
+
+async function saveLogSession(){
+  const date = el('sessionDate').value;
+  if (!date){ alert('กรุณาเลือกวันที่'); return; }
+  // เช็คซ้ำอีกครั้งก่อนยิง API เผื่อข้อมูลเปลี่ยนไประหว่างเปิดฟอร์มค้างไว้
+  const s = subjects.find(x => x.id === activeSubjectId);
+  if (s && s.count >= s.total){
+    alert('วิชานี้เรียนครบจำนวนคาบแล้ว');
+    closeLogSession();
+    return;
+  }
+  const data = await apiCall('logSession', { subjectId: activeSubjectId, date });
+  if (data.error){
+    alert(data.error);
+  } else {
+    subjects = data.subjects || subjects;
+    renderSubjects();
+  }
+  closeLogSession();
+}
+
+async function deleteSubject(subjectId, subjectName){
+  const confirmed = confirm(`ลบวิชา "${subjectName}" ใช่ไหม? ประวัติการลงคาบทั้งหมดของวิชานี้จะถูกลบไปด้วย และกู้คืนไม่ได้`);
+  if (!confirmed) return;
+  const data = await apiCall('deleteSubject', { subjectId });
+  subjects = data.subjects || subjects;
+  renderSubjects();
+}
+window.deleteSubject = deleteSubject; // ใช้จาก inline onclick ใน card
+
+// ---------- Wire up events ----------
+el('openAddSubject').addEventListener('click', openAddSubject);
+el('cancelAddSubject').addEventListener('click', closeAddSubject);
+el('saveSubject').addEventListener('click', saveSubject);
+el('cancelLogSession').addEventListener('click', closeLogSession);
+el('saveLogSession').addEventListener('click', saveLogSession);
+window.openLogSession = openLogSession; // ใช้จาก inline onclick ใน card
+
+// ---------- Init (LIFF) ----------
+async function init(){
+  if (CONFIG.LIFF_ID && CONFIG.LIFF_ID !== 'YOUR_LIFF_ID_HERE' && window.liff){
+    try {
+      await liff.init({ liffId: CONFIG.LIFF_ID });
+      if (!liff.isLoggedIn() && !liff.isInClient()) liff.login();
+    } catch (err){
+      console.warn('LIFF init ไม่สำเร็จ (ปกติถ้ายังไม่ได้ตั้งค่า LIFF_ID):', err);
+    }
+  }
+  if (CONFIG.API_URL === 'YOUR_APPS_SCRIPT_URL_HERE'){
+    demoMode = true;
+    showBanner('ยังไม่ได้เชื่อมต่อ Google Sheet — กำลังแสดงข้อมูลตัวอย่าง');
+  }
+  await loadSubjects();
+}
+
+init();
+</script>
+</body>
+</html>
